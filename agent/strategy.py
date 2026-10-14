@@ -405,12 +405,15 @@ if __name__ == "__main__":
         f"credits_left={disciplined_pacer.credits_left} bankrupt_by={disciplined_pacer.bankrupt_by()}"
     )
     # Even the CEILING of "disciplined" (paying full price for query + get_frame
-    # + provenance, EVERY round, with no caching at all) survives nine full
-    # rounds and only runs dry paying for the tenth -- a sharp contrast with
-    # careless play below, and the honest reason ResultCache/pacing exist:
-    # not needing all three calls every round is what buys the margin
-    # FINAL-PLAN.md 4.3 calls "sustainable".
-    assert disciplined_pacer.bankrupt_by() == ROUNDS_PER_DUEL, disciplined_pacer.bankrupt_by()
+    # + provenance, EVERY round, with no caching at all) survives at least nine
+    # full rounds -- with today's price table (9 cr/round) it survives all ten
+    # with a thin margin. Compare with careless play below; this is the
+    # reason ResultCache/pacing exist: not needing all three calls every
+    # round is what buys the margin FINAL-PLAN.md 4.3 calls "sustainable".
+    # Computed from the live prices, not hard-coded, so a retune cannot make
+    # this demo lie (it used to assert bankruptcy in round 10 unconditionally).
+    expected_bankrupt = None if disciplined * ROUNDS_PER_DUEL <= disciplined_pacer.starting_pool else ROUNDS_PER_DUEL
+    assert disciplined_pacer.bankrupt_by() == expected_bankrupt, disciplined_pacer.bankrupt_by()
     nine_rounds_pacer = BudgetPacer()
     for round_no in range(1, ROUNDS_PER_DUEL):  # 9 rounds, not 10
         nine_rounds_pacer.record_spend(round_no, disciplined)
